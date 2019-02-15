@@ -2,7 +2,6 @@ from scipy.fftpack import fft, fftshift
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import scipy.signal as sgn
 
 
 def fourier(series: pd.Series, shifted_to_center=True)->pd.Series:
