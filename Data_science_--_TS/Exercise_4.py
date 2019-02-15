@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # Load data and labels
 t_acc_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_x_train.txt", header=None, sep='\s+')
@@ -28,11 +29,25 @@ print(body_acc_train.info())
 # Unoverlap the data include taking the first or last half, or just taking every second row.
 unoverlapped = body_acc_train.iloc[:,32:96]
 
-# Merge with labels
-unoverlapped_labels = unoverlapped.merge(labels, how='outer', left_index=True, right_index=True)
-print(unoverlapped_labels.info())
-
-
 # get values as numpy array and flatten.
 signal = unoverlapped.values.flatten()
 print(signal)
+
+# expand the labels so we have a label for each individual data point.
+expanded_labels = np.repeat(labels.values.flatten(), 64)
+print(expanded_labels)
+
+# In numpy, make tuples from each datapoint and label.
+merged = np.append(signal.reshape(1,signal.shape[0]).T,expanded_labels.reshape(1,expanded_labels.shape[0]).T, axis=1)
+print(merged)
+
+# Feed this array into pandas
+merged = pd.DataFrame(merged, columns=["val", "label"])
+
+# Numpy converted out labels to floats, so convert back to ints.
+merged = merged.astype({"label": int})
+print(merged)
+
+
+
+
