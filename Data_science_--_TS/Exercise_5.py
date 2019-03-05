@@ -20,11 +20,12 @@ for activity in activities:
     }
     characteristics.append(characteristic)
 
+if __name__ == "__main__":
 
-plt.figure()
-x = np.arange(-1, 1, 0.001)
-for characteristic in characteristics:
-    plt.plot(x, mlab.normpdf(x, characteristic['mean'], math.sqrt(characteristic['variance'])))
-plt.title("Gaussian plot of activities")
-plt.legend(["activity {}".format(characteristic['label']) for characteristic in characteristics])
-plt.show()
+    plt.figure()
+    x = np.arange(-1, 1, 0.001)
+    for characteristic in characteristics:
+        plt.plot(x, mlab.normpdf(x, characteristic['mean'], math.sqrt(characteristic['variance'])))
+    plt.title("Gaussian plot of activities")
+    plt.legend(["activity {}".format(characteristic['label']) for characteristic in characteristics])
+    plt.show()
