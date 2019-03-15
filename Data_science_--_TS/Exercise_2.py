@@ -1,17 +1,29 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
+print(" -----------------------------------------------------------")
+print(" --- A --- ")
+print(" -----------------------------------------------------------")
 train_label_series = pd.read_csv("UCI+HAR+Dataset/train/Y_train.txt", header=None, sep='\s+')
 print(train_label_series.info())
 print(train_label_series.head())
 print(train_label_series.columns)
+print("This dataset has 1 columns and 7352 rows.")
+print("Each participant performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) for a certain amount of time.")
+print("Each activity was assigned a label.")
+print("The rows are measurements at certain timestamps.")
+print("Whatever label was associated to the activity done at the timestamp was recorded.")
+print("The data recorded for each participant has been concatonated.")
 
-plt.figure()
-train_label_series.hist()
+print(" -----------------------------------------------------------")
+print(" --- B --- ")
+print(" -----------------------------------------------------------")
 x = train_label_series[0].value_counts()
-
 plt.figure()
 plt.bar(x.index, x.values)
-
 plt.show()
+print("The dataset is unbalanced.")
+print("Some algorithms are sensitive to the number of measurements for a class.")
+print("When the dataset is unbalanced these algorithms tend to favour the classes,")
+print("which have more measurements. As a results the overall accuracy for these")
+print("algorithms will be lower.")
