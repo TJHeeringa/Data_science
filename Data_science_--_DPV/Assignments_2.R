@@ -4,7 +4,7 @@ library(readr)
 library(dplyr)
 library(lubridate)
 
-data0 <- read_delim(file = "data/BI_Raw_data.csv",
+data0 <- read_delim(file = "data/BI_Raw_Data.csv",
                     delim = ";", col_names = TRUE, col_types = NULL)
 head(data0)
 
@@ -19,8 +19,14 @@ product <- data0 %>%
   mutate(productid = row_number())
 
 # make Customer table ’customer’:
-sales <- data0 %>%
-  # dan nog iets
+customer <- data0 %>%
+  select(Customer_Name, Customer_Country) %>%
+  rename(name = Customer_Name, country = Customer_Country) %>%
+  arrange(name, country) %>%
+  group_by(name, country) %>%
+  distinct() %>%
+  ungroup() %>%
+  mutate(cust_id = row_number())
 
 sales <- sales %>%
   full_join(product, by = c("Product_Name" = "name",
