@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from Exercise_5 import activities
+from Exercise_3 import ACTIVITY_DICT
 
 
 def fourier(series: pd.Series, shifted_to_center=True)->pd.Series:
@@ -24,7 +25,16 @@ if __name__ == "__main__":
     sample_spacing = 1.0/1000.0
 
     x = np.linspace(0.0, num_samples*sample_spacing, num_samples)
-    testsignal = np.sin(2*2*np.pi*x)+0.8*np.sin(4*2*np.pi*x)+0.5*np.sin(6*2*np.pi*x)
+    test_signal = np.sin(2*2*np.pi*x)+0.8*np.sin(4*2*np.pi*x)+0.5*np.sin(6*2*np.pi*x)
+
+    plt.figure()
+    plt.title("FFT of testsignal -- zoomed")
+    plt.xlim(0., 25)
+    plotfourier(len(test_signal), sample_spacing, test_signal)
+
+    plt.figure()
+    plt.title("FFT of testsignal")
+    plotfourier(len(test_signal), sample_spacing, test_signal)
 
     for signal in activities:
         normed = signal["val"] - signal["val"].mean()
@@ -35,9 +45,10 @@ if __name__ == "__main__":
         # plt.legend([signal["label"].values[0]])
 
         plt.figure()
-        plt.title("FFT of " + str(signal["label"].values[0]))
-        plt.ylim(0.,0.04)
+        plt.title("FFT of " + ACTIVITY_DICT[signal["label"].values[0]])
+        plt.ylim(0., 0.04)
         plotfourier(len(normed), 1.0/50.0, normed)
-        plt.legend(["fft"])
 
     plt.show()
+
+    print("Based on the spectra it is clear that again passive and active activities can be discerned.")
