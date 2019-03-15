@@ -17,9 +17,10 @@ class DTW:
     def dtw(self):
         self.m = np.zeros((len(self.a1), len(self.a2)), dtype=float)
         self.m = self.m - 1.
-        self.bound = self.LB_Keogh(200)
+        self.bound = self.LB_Keogh(max(200, abs(len(self.a1) - len(self.a2))))
         return self.solve(len(self.a1)-1, len(self.a2)-1)
 
+    # thanks to http://alexminnaar.com/time-series-classification-and-clustering-with-python.html
     def LB_Keogh(self, r):
         LB_sum = 0
         s1 = self.a1
