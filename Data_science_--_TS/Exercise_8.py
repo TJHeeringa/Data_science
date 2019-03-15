@@ -42,7 +42,7 @@ class DTW:
         return abs(n-m)
 
     def solve(self, i : int, j : int):
-        if (abs(i-j) > self.bound):
+        if (DTW.dist(self.a1[i],self.a2[j]) > self.bound):
             return self.infty
 
         if self.m[i,j] >= 0:
