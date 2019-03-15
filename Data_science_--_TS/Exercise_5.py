@@ -6,7 +6,7 @@ import math
 
 activities = [merged[merged['label'] == i] for i in range(1, 7)]
 
-characteristics = []
+characteristics = np.ndarray([])
 
 for activity in activities:
     characteristic = {
@@ -18,10 +18,9 @@ for activity in activities:
         "spread": activity["val"].max()-activity["val"].min(),
 
     }
-    characteristics.append(characteristic)
+    characteristics = np.append(characteristics, characteristic)
 
-if __name__ == "__main__":
-
+if __name__ == '__main__':
     plt.figure()
     x = np.arange(-1, 1, 0.001)
     for characteristic in characteristics:
@@ -29,3 +28,6 @@ if __name__ == "__main__":
     plt.title("Gaussian plot of activities")
     plt.legend(["activity {}".format(characteristic['label']) for characteristic in characteristics])
     plt.show()
+
+
+
