@@ -239,8 +239,8 @@ def multi_dtw_init(tss1, tss2, bound):
 
 def multi_dtw_iteration(tssm, i):
     total = 0
-    for i in range(tssm.shape[0]):
-        total += dtw_iteration(tssm[i], i) ** 2
+    for j in range(tssm.shape[0]):
+        total += dtw_iteration(tssm[j], i) ** 2
     return total
 
 def dtw_init(a1,a2,m):
@@ -269,11 +269,11 @@ def dtw_init(a1,a2,m):
 
 def dtw_iteration(m, i):
     mid = m.shape[1]//2
-    halfbound = min(i, m.shape[0]-i, mid-2)
+    halfbound = min(i, m.shape[0]-i-1, mid-2)
     lower = mid-halfbound
     upper = mid+halfbound + 1
     for j in range(-halfbound, halfbound+1):
-        m[i, j] = min(m[i - 1, i + j - 1], m[i - 1, i + j], m[i - 1, i + j + 1]) + DTW.dist(m[i,0], m[i+j,mid*2])
+        m[i, mid+j] = min(m[i - 1, mid + j - 1], m[i - 1, mid + j], m[i - 1, mid + j + 1]) + DTW.dist(m[i,0], m[i+j,mid*2])
     return min(m[i, lower:upper+1])
 
 
@@ -334,8 +334,8 @@ testlabels = pd.read_csv("UCI+HAR+Dataset/test/y_test.txt", header=None, sep='\s
 
 
 if __name__ == '__main__':
-    model = DKNN(10)
-    model.train(trainset[:100], trainlabels[:100])
+    model = DKNN(1)
+    model.train(trainset, trainlabels)
     res = model.predict(testset[0])
     print(res)
     print(testlabels[0])
