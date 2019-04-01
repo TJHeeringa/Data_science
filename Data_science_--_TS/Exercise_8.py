@@ -245,23 +245,22 @@ def d(x1,x2):
 
 def dtw_low_space(a1, a2, bound, d=d):
     assert(len(a1) == len(a2))
-    mid = bound // 2
-    m = np.full((2,2*mid+3), np.infty)
+    mid = bound + 1
+    m = np.full((2,2*bound+3), np.infty)
     m[0,mid] = d(a1[0], a2[0])
     for i in range(1,len(a1)):
         k = i % 2
         l = 1-k
-        halfbound = min(i, len(a1)-i-1, mid-2)
-        for j in range(-halfbound, halfbound+1):
-            m[k, mid+j] = min(m[l, mid + j - 1], m[l, mid + j], m[l, mid + j + 1]) + d(a1[i], a2[i+j])
+        for j in range(max(mid-i, 1), min(mid+(len(a1)-i-1), mid+bound)+1):
+            m[k, j] = min(m[k, j - 1], m[l, j], m[l, j + 1]) + d(a1[i], a2[i-mid+j])
     return m[(len(a1)-1) % 2, mid]
 
 def multi_dtw_low_space(tss1, tss2, bound, d=d):
     assert(len(tss1) == len(tss2))
     total = 0
     for i in range(len(tss1)):
-        total += dtw_low_space(tss1[i], tss2[i], bound, d) ** 2
-    return np.sqrt(total)
+        total += dtw_low_space(tss1[i], tss2[i], bound, d) # ** 2
+    return total
 
 
 
@@ -349,37 +348,37 @@ class DKNN(DTWKNN2D):
 import random
 
 
-def upperbound_dtw_low_space(a1, a2, bound, d=d):
-    assert(len(a1) == len(a2))
-    mid = bound // 2
-    m = np.full((2,2*mid+3), np.infty)
-    m[0,mid] = d(a1[0], a2[0])
-    for i in range(1,len(a1)):
-        k = i % 2
-        l = 1-k
-        halfbound = min(i, len(a1)-i-1, mid-2)
-        for j in range(-halfbound, halfbound+1):
-            m[k, mid+j] = min(m[l, mid + j - 1], m[l, mid + j], m[l, mid + j + 1]) + d(a1[i], a2[i+j])
-    return m[(len(a1)-1) % 2, mid]
+# def upperbound_dtw_low_space(a1, a2, bound, d=d):
+#     assert(len(a1) == len(a2))
+#     mid = bound // 2
+#     m = np.full((2,2*mid+3), np.infty)
+#     m[0,mid] = d(a1[0], a2[0])
+#     for i in range(1,len(a1)):
+#         k = i % 2
+#         l = 1-k
+#         halfbound = min(i, len(a1)-i-1, mid-2)
+#         for j in range(-halfbound, halfbound+1):
+#             m[k, mid+j] = min(m[l, mid + j - 1], m[l, mid + j], m[l, mid + j + 1]) + d(a1[i], a2[i+j])
+#     return m[(len(a1)-1) % 2, mid]
 
 def upperbound_multi_dtw_low_space(tss1, tss2, bound, upper, d=d):
     assert(len(tss1) == len(tss2))
     total = 0
     for i in range(len(tss1)):
-        total += upperbound_dtw_low_space(tss1[i], tss2[i], bound, d) ** 2
+        total += dtw_low_space(tss1[i], tss2[i], bound, d)
         if total > upper:
             total = np.infty
             #print("Aborted after iteration {}.".format(i))
             return total, i
     #print("not aborted")
-    return total, 9
-
-def multi_dtw_low_space_sq(tss1, tss2, bound, d=d):
-    assert(len(tss1) == len(tss2))
-    total = 0
-    for i in range(len(tss1)):
-        total += dtw_low_space(tss1[i], tss2[i], bound, d) ** 2
-    return total
+    return total, 8
+#
+# def multi_dtw_low_space_sq(tss1, tss2, bound, d=d):
+#     assert(len(tss1) == len(tss2))
+#     total = 0
+#     for i in range(len(tss1)):
+#         total += dtw_low_space(tss1[i], tss2[i], bound, d) ** 2
+#     return total
 
 
 class BoundedKNN(DTWKNN2D):
@@ -413,7 +412,7 @@ class BoundedKNN(DTWKNN2D):
                 # if self.verbose:
                 #     print("oldmax: {:8}, newmax:{:8}".format(max_dist[j], min(max_dist[j], dist + self.beacon_dists[i][j])))
                 max_dist[j] = min(max_dist[j], dist + self.beacon_dists[i][j])
-        upper_bound = nsmallest(self.k, max_dist)[-1]**2
+        upper_bound = nsmallest(self.k, max_dist)[-1]
         comparefunc = functools.partial(upperbound_multi_dtw_low_space, tss2=test, bound=self.bound, upper=upper_bound)
         res = np.array([[t,a] for (t,a) in map(comparefunc, self.tsss)])
         avg_abort = sum(res[:,1])/len(self.tsss)
@@ -449,12 +448,12 @@ class BeaKNN(DTWKNN2D):
             minmax[i][1] = np.infty
         for i, id in enumerate(self.beacon_ids):
             dist = multi_dtw_low_space(self.tsss[id], test, self.bound)
-            if self.verbose:
-                print("distance to beacon {}: {}".format(id, dist))
+            # if self.verbose:
+                # print("distance to beacon {}: {}".format(id, dist))
             for j in range(len(self.tsss)):
-                if self.verbose:
-                    print("oldmin: {:8}, newmin:{:8}".format(minmax[j][0], max(minmax[j][0], abs(dist-self.beacon_dists[i][j]))))
-                    print("oldmax: {:8}, newmax:{:8}".format(minmax[j][1], min(minmax[j][1], dist + self.beacon_dists[i][j])))
+                # if self.verbose:
+                    # print("oldmin: {:8}, newmin:{:8}".format(minmax[j][0], max(minmax[j][0], abs(dist-self.beacon_dists[i][j]))))
+                    # print("oldmax: {:8}, newmax:{:8}".format(minmax[j][1], min(minmax[j][1], dist + self.beacon_dists[i][j])))
                 minmax[j][0] = max(minmax[j][0], abs(dist-self.beacon_dists[i][j]))
                 minmax[j][1] = min(minmax[j][1], dist + self.beacon_dists[i][j])
         upper_bound = nsmallest(self.k, minmax[:,1])[-1]
@@ -530,13 +529,13 @@ testlabels = pd.read_csv("UCI+HAR+Dataset/test/y_test.txt", header=None, sep='\s
 import time
 if __name__ == '__main__':
     starttime = time.time()
-    model = BoundedKNN(k=10, proc=14, bound=20, verbose=True, beacons=40)
-    # model = BeaKNN(k=5, proc=14, bound=20, verbose=True, beacons=20)
+    model = BoundedKNN(k=10, proc=6, bound=10, verbose=True, beacons=20)
+    # model = BeaKNN(k=5, proc=6, bound=20, verbose=True, beacons=10)
 
     # model = DTWKNN2D(k=10, proc=14, bound=20)
     amount = 100
     offset = 1610
-    model.train(trainset[:10000], trainlabels[:10000])
+    model.train(trainset[:1000], trainlabels[:1000])
     traintime = (time.time() - starttime)
     print("training took {:.3f} seconds".format(traintime))
     # res = model.predict(testset[0])
