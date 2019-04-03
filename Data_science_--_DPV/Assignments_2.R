@@ -3,8 +3,13 @@ library(RPostgreSQL)
 library(readr)
 library(dplyr)
 library(lubridate)
+library(ggplot2)
 
-data0 <- read_delim(file = "data/BI_Raw_Data.csv",
+self <- function(.data) {
+  .data
+}
+
+data0 <- read_delim(file = "data/BI_Raw_Data_UTF.csv",
                     delim = ";", col_names = TRUE, col_types = NULL)
 head(data0)
 
@@ -28,14 +33,19 @@ customer <- data0 %>%
   ungroup() %>%
   mutate(cust_id = row_number())
 
-sales <- sales %>%
-  full_join(product, by = c("Product_Name" = "name",
-                            "Product_Category" = "category")) %>%
-  select( -Product_Name, -Product_Category)
+sales <- data0 %>%
+  select(Order_ID, Order_Date_Day, Customer_Name, Customer_Country, Product_Name, Product_Category, Product_Order_Price_Total) %>%
+  rename(order_id = Order_ID, order_date = Order_Date_Day, sales = Product_Order_Price_Total) %>%
+  arrange(order_id) %>%
+  full_join(product, by = c("Product_Name" = "name", "Product_Category" = "category")) %>%
+  select( -Product_Name, -Product_Category) %>%
+  full_join(customer, by = c("Customer_Name" = "name", "Customer_Country" = "country")) %>%
+  select( -Customer_Name, -Customer_Country)
+
 
 drv <- dbDriver("PostgreSQL")
 con <- dbConnect(drv, port = 5432, host = "castle.ewi.utwente.nl",
-                 dbname = "dpv2a139 ", user = "dpv2a139 ", password = "Ah53VQLa",
+                 dbname = "dpv2a139", user = "dpv2a139", password = "Ah53VQLa",
                  options="-c search_path=ass2")
 dbWriteTable(con, "product", value = product, overwrite = T, row.names = F)
 dbWriteTable(con, "customer", value = customer, overwrite = T, row.names = F)
@@ -46,9 +56,35 @@ dbListTables(con)
 str(dbReadTable(con,"customer"))
 str(dbReadTable(con,"sales"))
 str(dbReadTable(con,"product"))
-# or if a table is in schema ass2:
-#dbGetQuery(con, "SELECT table_name FROM information_schema.tables
-#                 WHERE table_schema=’ass2’") ## to get the tables from schema ass2
-#str(dbReadTable(con, c("ass2", "sales")))
 
-ggplot(data=, aes(x = , y = , col = ) + geom_point() + geom_smooth(method= "lm", se = False))
+
+cust <- dbReadTable(con,"customer")
+sal <- dbReadTable(con,"sales")
+prod <- dbReadTable(con,"product")
+
+
+# Most valuable customer
+mvalcust <- sal %>% 
+  select(sales, cust_id) %>%
+  aggregate(by = list( sal$cust_id ), FUN = sum) %>%
+  select(Group.1, sales) %>%
+  rename(cust_id = Group.1) %>%
+  arrange(-sales) %>%
+  full_join(cust, by = c("cust_id" = "cust_id")) %>% 
+  select(name, sales)
+
+head(mvalcust)
+
+# Most valuable product
+mvalprod <- sal %>% 
+  select(sales, productid) %>%
+  aggregate(by = list( sal$productid ), FUN = sum) %>%
+  select(Group.1, sales) %>%
+  rename(productid = Group.1) %>%
+  arrange(-sales) %>%
+  full_join(prod, by = c("productid" = "productid")) %>% 
+  select(name, sales)
+
+head(mvalprod)
+
+ggplot(data=sal, aes(x = Customer_Name))
