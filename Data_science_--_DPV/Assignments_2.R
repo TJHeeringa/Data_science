@@ -53,10 +53,6 @@ dbWriteTable(con, "sales", value = sales, overwrite = T, row.names = F)
 
 
 dbListTables(con)
-str(dbReadTable(con,"customer"))
-str(dbReadTable(con,"sales"))
-str(dbReadTable(con,"product"))
-
 
 cust <- dbReadTable(con,"customer")
 sal <- dbReadTable(con,"sales")
@@ -87,4 +83,6 @@ mvalprod <- sal %>%
 
 head(mvalprod)
 
-ggplot(data=sal, aes(x = Customer_Name))
+ggplot(data=mvalcust, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
+ggplot(data=mvalprod, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
+

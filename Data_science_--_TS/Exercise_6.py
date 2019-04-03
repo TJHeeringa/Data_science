@@ -13,10 +13,15 @@ def fourier(series: pd.Series, shifted_to_center=True)->pd.Series:
         return pd.Series(fft(series.values))
 
 
-def plotfourier(num_samples, sample_spacing, values):
+def plotfourier(num_samples, sample_spacing, values, label=None, filter=None):
     yf = fft(values)
-    xf = np.linspace(0.0, 1.0 / (2.0 * sample_spacing), num_samples // 2)
-    plt.plot(xf, 2.0 / num_samples * np.abs(yf[0:num_samples // 2]))
+    xf = np.linspace(0.0, 1.0 / (2.0 * sample_spacing), num_samples // 2)cd 
+    if filter is not None:
+        yf = filter(yf)
+    if label is not None:
+        plt.plot(xf, 2.0 / num_samples * np.abs(yf[0:num_samples // 2]), label=label)
+    else:
+        plt.plot(xf, 2.0 / num_samples * np.abs(yf[0:num_samples // 2]))
 
 
 if __name__ == "__main__":
