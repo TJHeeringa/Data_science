@@ -12,4 +12,5 @@ for i in range(65, 66):
     print(classes.columns)
     data = pd.concat([df, classes], axis=1)
     print(data.columns)
+    # data = data[data.values[:, 0] >= sample_threshold]
     data.to_csv("AF_Filtered_Data/Data{}.csv".format(i), sep=' ', header=True)

@@ -92,8 +92,8 @@ for i in range(40, 101):
             "rm - skew",
             "rm - median",
             "rm - first quantile",
-            "rm - last quantile"
-            "rm - sum",
+            "rm - last quantile",
+            "rm - sum"
         ])
         index_o = 0
         index_rm = 0
