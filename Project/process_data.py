@@ -3,6 +3,8 @@ import numpy as np
 from scipy import stats as st
 import csv
 import time
+from multiprocessing import Pool
+
 
 
 def collect_values(series, t2, t1, index):
@@ -12,7 +14,7 @@ def collect_values(series, t2, t1, index):
     )):
         if _time == '':
             break
-        elif t2 < t1 <= _time <= '23:59:59':
+        elif t2 < t1 <= _time:
             values_between_time_stamps = np.append(values_between_time_stamps, value)
         elif _time < t2:
             values_between_time_stamps = np.append(values_between_time_stamps, value)
@@ -26,13 +28,13 @@ def mad(data, axis=None):
     return np.mean(np.absolute(data - np.mean(data, axis)), axis)
 
 
-for i in range(40, 101):
+def process(i):
     # Load data from file
     df = pd.read_csv("AF-Raw-Data/AF_Data/ECG_data/Data{}.txt".format(i), sep=' ', header=None, names=range(11), low_memory=False)
     classes = pd.read_csv("AF-Raw-Data/AF_Data/Class/Control{}.txt".format(i), sep=' ', header=None, names=range(11), low_memory=False)
 
     # parameters
-    bound = 1000
+    bound = 2000
     window = 10
 
     # Pick relevant columns
@@ -153,4 +155,14 @@ for i in range(40, 101):
             ])
     end_time = time.time()
     print("iteration {} took {} seconds".format(i, end_time-start_time))
+
+
+threads = 12
+start = 0
+end = 804
+
+if __name__ == "__main__":
+    p = Pool(threads)
+    l = [i for i in range(start, end)]
+    p.map(process, l)
 
