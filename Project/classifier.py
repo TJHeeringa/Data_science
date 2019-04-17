@@ -7,14 +7,14 @@ from sklearn import svm
 import random
 
 
-totalfilecount = 20
+totalfilecount = 200
 testfraction = 0.2
 
 if __name__ == "__main__":
     testblocks = random.sample(range(1, totalfilecount), int(totalfilecount*testfraction))
     trainblocks = list(set(range(1,totalfilecount)) - set(testblocks))
 
-    svm_classifier = svm.SVC()
+    svm_classifier = svm.SVC(gamma='scale')
 
     all_features = None
     all_labels = None
@@ -60,5 +60,24 @@ if __name__ == "__main__":
 
 
     res = svm_classifier.predict(all_features)
-    print(all_labels)
-    print(sum([(a + b) % 2 for (a,b) in zip(res, all_labels) ]))
+    # print(all_labels)
+    # print(sum([(a + b) % 2 for (a,b) in zip(res, all_labels) ]))
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    for i in range(len(res)):
+        if all_labels[i] != 0 and res[i] != 0:
+            tp += 1
+        elif all_labels[i] == 0 and res[i] == 0:
+            tn += 1
+        elif all_labels[i] != 0 and res[i] == 0:
+            fn += 1
+        elif all_labels[i] == 0 and res[i] != 0:
+            fp += 1
+
+    print("Confusion Matrix:")
+    print("{:4} | {:4}\n------------\n{:4} | {:4}".format(tp, fn, fp, tn))
+    print()
+    print("Recall AF: {}".format(tp / (tp + fn)))
+    print("Precision AF: {}".format(tp / (tp + fp)))
