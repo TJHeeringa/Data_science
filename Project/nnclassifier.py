@@ -20,7 +20,7 @@ if __name__ == "__main__":
     all_features = None
     all_labels = None
     for block in trainblocks:
-        data = pd.read_csv("AF_Filtered_Data/Data{}.csv".format(block), sep=' ', header=0).values
+        data = pd.read_csv("AF_Filtered_Data2/Data{}.csv".format(block), sep=' ', header=0).values
         if data.shape[0] == 0:
             continue
         valids = np.isfinite(data[:,-1].reshape((data.shape[0],)))
@@ -37,11 +37,22 @@ if __name__ == "__main__":
         else:
             all_labels = np.concatenate((all_labels, labels))
 
+    # yaf_feat = all_features[all_labels == 1]
+    #
+    # fact = int(len(all_features) / len(yaf_feat)) - 1
+    #
+    # for i in range(fact):
+    #     all_features = np.concatenate(all_features, yaf_feat)
+    #     all_labels = np.concatenate(all_labels, np.ones(len(yaf_feat)))
+
+
     nnclassifier = Sequential()
     nnclassifier.add(InputLayer(input_shape=(all_features.shape[1],)))
     nnclassifier.add(Dense(all_features.shape[1], activation='sigmoid'))
     nnclassifier.add(Dense(1, activation='sigmoid'))
     nnclassifier.compile(loss='mse', optimizer='adam', metrics=['mse'])
+
+
 
     nnclassifier.fit(all_features, all_labels, epochs=1)
 
