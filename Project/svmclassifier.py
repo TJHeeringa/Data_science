@@ -1,21 +1,21 @@
 import pandas as pd
 import numpy as np
-from scipy import stats as st
-import csv
-import time
+import thundersvm
 from sklearn import svm
 import random
 
 
-totalfilecount = 200
+totalfilecount = 10
 testfraction = 0.2
 
 if __name__ == "__main__":
     testblocks = random.sample(range(1, totalfilecount), int(totalfilecount*testfraction))
     trainblocks = list(set(range(1,totalfilecount)) - set(testblocks))
 
-    svm_classifier = svm.SVC(gamma='scale')
-
+    # svm_classifier = thundersvm.SVC()
+    svm_classifier = svm.SVC()
+    # gamma='auto', kernel='linear'
+    print("collecting data...")
     all_features = None
     all_labels = None
     for block in trainblocks:
@@ -36,8 +36,11 @@ if __name__ == "__main__":
         else:
             all_labels = np.concatenate((all_labels, labels))
 
+    print("training classifier...")
+
     svm_classifier.fit(all_features, all_labels)
 
+    print("collecting test data")
     all_features = None
     all_labels = None
     for block in testblocks:
@@ -58,8 +61,10 @@ if __name__ == "__main__":
         else:
             all_labels = np.concatenate((all_labels, labels))
 
-
+    print("predicting...")
     res = svm_classifier.predict(all_features)
+
+    print("calculating scores...")
     # print(all_labels)
     # print(sum([(a + b) % 2 for (a,b) in zip(res, all_labels) ]))
     tp = 0
