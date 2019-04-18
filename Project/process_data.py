@@ -58,7 +58,7 @@ def process(i):
     # print("{:.3}: column filter done.".format(time.time() - start_time))
 
     # shift time stamps
-    time_stamps_shifted = time_stamps.shift(-1, fill_value=time_stamps.values[0])
+    # time_stamps_shifted = time_stamps.shift(-1, fill_value=time_stamps.values[0])
 
     # print("{:.3}: shifting data done.".format(time.time() - start_time))
 
@@ -131,8 +131,17 @@ def process(i):
         R_peak_bounded_vals = R_peak_bounded.values
         R_peak_bounded_rolling_mean_vals = R_peak_bounded_rolling_mean.values
         R_peak_bounded_differencing_vals = R_peak_bounded_differencing.values
+        timestamp_vals = time_stamps.values
+        timestamp_length = len(timestamp_vals)
 
-        for (t1, t2) in zip(time_stamps.values, time_stamps_shifted.values):
+        for j in range(timestamp_length):
+            if j == timestamp_length-1:
+                t1 = timestamp_vals[j]
+                t2 = timestamp_vals[0]
+            else:
+                t1 = timestamp_vals[j]
+                t2 = timestamp_vals[j+1]
+
             collect_start = time.time()
             (values_between_time_stamps_o, index_o) = collect_values(R_peak_bounded_vals, t2, t1, index_o)
             (values_between_time_stamps_rm, index_rm) = collect_values(R_peak_bounded_rolling_mean_vals, t2, t1, index_rm)
@@ -211,15 +220,15 @@ def process(i):
     # print("collecting: {:.3}, quanting: {:.3}, writing: {:.3}". format(collecting_time, quantile_time, writing_time))
 
 
-threads = 10
+threads = 4
 start = 1
 end = 805
 
 if __name__ == "__main__":
-    # p = Pool(threads)
-    # l = [i for i in range(start, end)]
-    # p.map(process, l)
-    for i in range(start, end):
-        process(i)
+    p = Pool(threads)
+    l = [i for i in range(start, end)]
+    p.map(process, l)
+    # for i in range(start, end):
+    #     process(i)
 
 
