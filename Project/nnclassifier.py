@@ -20,7 +20,7 @@ if __name__ == "__main__":
     all_features = None
     all_labels = None
     for block in trainblocks:
-        data = pd.read_csv("AF_Filtered_Data2/Data{}.csv".format(block), sep=' ', header=0).values
+        data = pd.read_csv("AF_Filtered_Data_test/Data{}.csv".format(block), sep=' ', header=0).values
         if data.shape[0] == 0:
             continue
         valids = np.isfinite(data[:,-1].reshape((data.shape[0],)))
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 
 
-    nnclassifier.fit(all_features, all_labels, epochs=1)
+    nnclassifier.fit(all_features, all_labels, epochs=2)
 
 
     all_features = None
