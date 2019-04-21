@@ -70,7 +70,7 @@ sales_sums <- sales %>%
   group_by(`product_id`, `order_date`, `shipped_late`, `returned`, `cust_id`) %>%
   summarise_at(vars("order_qty","sales", "profit", "shipping_cost"), sum)
 
-sales2 <- sales %>%
+sales <- sales %>%
   select(`product_id`, `order_date`, `shipped_late`, `returned`, `cust_id`, `unitprice`) %>%
   group_by(`product_id`, `order_date`, `shipped_late`, `returned`, `cust_id`) %>%
   distinct() %>%
@@ -79,30 +79,69 @@ sales2 <- sales %>%
   
   # summarise(sales = sum(sales), orderquantity = sum(orderquantity), unitprice=mean(unitprice), profit = sum(profit), shippingcost = sum(shippingcost))
 
-# least profitable product
-leastprofprod <- sales %>% 
-  select(profit, product_id) %>%
-  aggregate(by = list(sales$product_id), FUN = sum) %>%
-  select(Group.1, profit) %>%
-  rename(product_id = Group.1) %>%
-  arrange(profit) %>%
+# least profitable product sub-category
+leastprofprod <- sales %>%
   full_join(product, by = c("product_id" = "product_id")) %>% 
-  select(name, profit)
-
-
+  select(name, profit) %>%
+  group_by(name) %>%
+  summarise(profit = sum(profit)) %>%
+  arrange(profit)
 
 # plot of profit vs product
-ggplot(data=head(leastprofprod, 5), aes(x = reorder(`name`, `profit`), y = `profit`)) + geom_bar(stat = "identity") + xlab("product") + scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+lppplot <- ggplot(data=head(leastprofprod, 5), aes(x = reorder(`name`, `profit`), y = `profit`)) + geom_bar(stat = "identity") + xlab("product") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 1 - Least Profitable Product.pdf", plot = lppplot)
 
-ggplot(data=sales, aes(x = `product_id`, y = profit))+stat_summary(fun.y = sum)
+# least profitable product sub-category
+leastprofcat <- sales %>%
+  full_join(product, by = c("product_id" = "product_id")) %>% 
+  select(sub_category, profit) %>%
+  group_by(sub_category) %>%
+  summarise(profit = sum(profit)) %>%
+  arrange(profit)
 
-# plot of shipped_late vs product
-ggplot(data=sales, aes(x = `product_id`, y = shipped_late)) +
-  stat_summary(fun.y = sum, na.rm = TRUE, group = 3, color = 'black', geom ='line')
+lpcplot <- ggplot(data=head(leastprofcat, 5), aes(x = reorder(`sub_category`, `profit`), y = `profit`)) + geom_bar(stat = "identity") + xlab("sub-category") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 2 - Least Profitable Category.pdf", plot = lpcplot)
 
-# plot of returns vs product
-ggplot(data=sales, aes(x = `product_id`, y = returned)) + geom_point() +
-  stat_summary(fun.y = sum, na.rm = TRUE, group = 3, color = 'black', geom ='line')
+
+lateprod <- sales %>%
+  full_join(product, by = c("product_id" = "product_id")) %>% 
+  select(name, shipped_late) %>%
+  group_by(name) %>%
+  summarise(shipped_late = sum(shipped_late)) %>%
+  arrange(-shipped_late)
+
+laprplot <- ggplot(data=head(lateprod, 5), aes(x = reorder(`name`, -`shipped_late`), y = `shipped_late`)) + geom_bar(stat = "identity") + xlab("Product") + ylab("shipped late (#)") + ggtitle("Products that were shipped late the most often") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 3 - Late Products.pdf", plot = laprplot)
+
+latecat <- sales %>%
+  full_join(product, by = c("product_id" = "product_id")) %>% 
+  select(sub_category, shipped_late) %>%
+  group_by(sub_category) %>%
+  summarise(shipped_late = mean(shipped_late)*100) %>%
+  arrange(-shipped_late)
+
+lacaplot <- ggplot(data=head(latecat, 5), aes(x = reorder(`sub_category`, -`shipped_late`), y = `shipped_late`)) + geom_bar(stat = "identity") + xlab("Sub-Category") + ylab("shipped late (%)") + ggtitle("Sub-categories that were shipped late the most often") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 4 - Late Categories.pdf", plot = lacaplot)
+
+returnprod <- sales %>%
+  full_join(product, by = c("product_id" = "product_id")) %>% 
+  select(name, returned) %>%
+  group_by(name) %>%
+  summarise(returned = sum(returned)) %>%
+  arrange(-returned)
+
+reprplot <- ggplot(data=head(returnprod, 6), aes(x = reorder(`name`, -`returned`), y = `returned`)) + geom_bar(stat = "identity") + xlab("Product") + ylab("Returned (#)") + ggtitle("Products that were returned the most often") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 5 - Returned Products.pdf", plot = reprplot)
+
+returncat <- sales %>%
+  full_join(product, by = c("product_id" = "product_id")) %>% 
+  select(sub_category, returned) %>%
+  group_by(sub_category) %>%
+  summarise(returned = mean(returned)*100) %>%
+  arrange(-returned)
+
+recaplot <- ggplot(data=head(returncat, 5), aes(x = reorder(`sub_category`, -`returned`), y = `returned`)) + geom_bar(stat = "identity") + xlab("Sub-category") + ylab("returned (%)") + ggtitle("Sub-Categories that were returned the most often") + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+ggsave(filename = "Ass3 - 6 - Returned Categories.pdf", plot = recaplot)
 
 
 drv <- dbDriver("PostgreSQL")
@@ -118,4 +157,6 @@ dbListTables(con)
 str(dbReadTable(con,"customer"))
 str(dbReadTable(con,"sales"))
 str(dbReadTable(con,"product"))
-
+dbGetQuery(con,
+           "SELECT table_name FROM information_schema.tables
+            WHERE table_schema=’ass3’")

@@ -4,6 +4,7 @@ library(readr)
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+library(stringr)
 
 self <- function(.data) {
   .data
@@ -83,9 +84,11 @@ mvalprod <- sal %>%
 
 first5valprod <- head(mvalprod, 5)
 
-ggplot(data=first5valcust, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 customers") + xlab("Customer") #+ theme(text = element_text(size=14))
-ggplot(data=first5valprod, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 products") + xlab("Product")
-
+valcustplot <- ggplot(data=first5valcust, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 customers") + xlab("Customer") + scale_x_discrete(labels = function(x) str_wrap(x, width = 16))#+ theme(text = element_text(size=14))
+ggsave(filename = "Ass2 - 1 - Most Valuable Customers.pdf", plot = valcustplot)
+valprodplot <- ggplot(data=first5valprod, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 products") + xlab("Product") + scale_x_discrete(labels = function(x) str_wrap(x, width = 16))
+ggsave(filename = "Ass2 - 2 - Most Valuable Products.pdf", plot = valprodplot)
 # ggplot(data=first5valcust, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
 # ggplot(data=mvalprod, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
+
 
