@@ -4,245 +4,20 @@ from heapq import *
 
 import numpy as np
 import pandas as pd
-import sys
+import random
+import time
 
 from multiprocessing.pool import Pool
 
-# sys.setrecursionlimit(10000)
-#
-#
-# class DTW:
-#
-#
-#     def __init__(self, a1, a2):
-#         self.infty = float('inf')
-#         self.a1 = a1
-#         self.a2 = a2
-#         self.result = self.dtw()
-#
-#     def dtw(self):
-#         # self.m = np.zeros((len(self.a1), len(self.a2)), dtype=float)
-#         # self.m = self.m - 1.
-#         self.m = np.full((len(self.a1), len(self.a2)), self.infty)
-#         self.bound = 50 # self.LB_Keogh(max(20, abs(len(self.a1) - len(self.a2))))
-#         # return self.solve(len(self.a1)-1, len(self.a2)-1)
-#         # return self.dijkstra()
-#         return self.iterative()
-#
-#     # thanks to http://alexminnaar.com/time-series-classification-and-clustering-with-python.html
-#     def LB_Keogh(self, r):
-#         LB_sum = 0
-#         s1 = self.a1
-#         s2 = self.a2
-#         for ind, i in enumerate(s1):
-#
-#             lower_bound = min(s2[(ind - r if ind - r >= 0 else 0):(ind + r)])
-#             upper_bound = max(s2[(ind - r if ind - r >= 0 else 0):(ind + r)])
-#
-#             if i > upper_bound:
-#                 LB_sum = LB_sum + (i - upper_bound) ** 2
-#             elif i < lower_bound:
-#                 LB_sum = LB_sum + (i - lower_bound) ** 2
-#
-#         return np.sqrt(LB_sum)
-#
-#     @staticmethod
-#     def dist(n, m):
-#         return abs(n-m)
-#
-#
-#     def iterative(self):
-#         self.bound += 1
-#         self.m[0,0] = DTW.dist(self.a1[0], self.a2[0])
-#         for i in range(1, self.m.shape[0]):
-#             self.m[i, 0] = self.m[i - 1, 0] + DTW.dist(self.a1[i], self.a2[0])
-#         for j in range(1, self.m.shape[1]):
-#             self.m[0, j] = self.m[0, j - 1] + DTW.dist(self.a1[0], self.a2[j])
-#         for i in range(1, self.m.shape[0]):
-#             for j in range(max(1,i - self.bound//2), min(i + self.bound//2, self.m.shape[1])):
-#                 self.m[i,j] = min(self.m[i - 1, j - 1], self.m[i - 1, j], self.m[i, j - 1]) + DTW.dist(self.a1[i], self.a2[j])
-#
-#         rows = self.m.shape[0] - 1
-#         cols = self.m.shape[1] - 1
-#         return self.m[rows, cols]
-#
-#
-#     def dijkstra(self):
-#         for i in range(self.m.shape[0]):
-#             for j in range(self.m.shape[1]):
-#                 self.m[i,j] = self.infty if abs(i-j) > self.bound else DTW.dist(self.a1[i], self.a2[j])
-#
-#
-#         q = []
-#         heappush(q, (self.m[0,0], (0,0)))
-#
-#         rows = self.m.shape[0]-1
-#         cols = self.m.shape[1]-1
-#
-#         visited = np.full(self.m.shape, False)
-#
-#         res = -1
-#
-#         while (len(q) > 0):
-#             element = heappop(q)
-#
-#             if visited[element[1]]:
-#                 continue
-#             visited[element[1]] = True
-#
-#             if element[0] == self.infty:
-#                 continue
-#
-#             # if (element[1][0] < 50 and element[1][1] < 50):
-#             # print(element)
-#
-#             if (element[1] == (rows,cols)):
-#                 res = element[0]
-#                 break
-#
-#             next = []
-#             if element[1][0] < rows:
-#                 next.append((element[1][0] + 1, element[1][1]))
-#                 if element[1][1] < cols:
-#                     next.append((element[1][0] + 1, element[1][1] + 1))
-#
-#             if element[1][1] < cols:
-#                 next.append((element[1][0], element[1][1] + 1))
-#
-#             for n in next:
-#                 if not visited[n] and self.m[n] != self.infty:
-#                     heappush(q, (element[0] + self.m[n], n))
-#
-#         return res
-#
-#
-#
-#     def solve(self, i : int, j : int):
-#         #if (DTW.dist(self.a1[i],self.a2[j]) > self.bound):
-#         if (abs(i-j) > self.bound):
-#             return self.infty
-#
-#         if self.m[i,j] >= 0:
-#             return self.m[i,j]
-#         if i == 0 and j == 0:
-#             self.m[i,j] = DTW.dist(self.a1[i],self.a2[j])
-#             return self.m[i,j]
-#
-#         if i == 0:
-#             self.m[i,j] = DTW.dist(self.a1[i], self.a2[j]) + self.solve(i, j-1)
-#             return self.m[i,j]
-#         if j == 0:
-#             self.m[i,j] = DTW.dist(self.a1[i], self.a2[j]) + self.solve(i-1, j)
-#             return self.m[i,j]
-#
-#         self.m[i, j] = DTW.dist(self.a1[i], self.a2[j]) + min(self.solve(i-1, j),self.solve(i, j-1),self.solve(i-1, j-1))
-#         return self.m[i,j]
-#
-# def dtw_iterative(a1,a2,m,bound):
-#     rows = len(a1)
-#     cols = len(a2)
-#     bound += 1
-#     m[0,0] = DTW.dist(a1[0], a2[0])
-#     for i in range(1, rows):
-#         m[i, 0] = m[i - 1, 0] + DTW.dist(a1[i], a2[0])
-#     for j in range(1, cols):
-#         m[0, j] = m[0, j - 1] + DTW.dist(a1[0], a2[j])
-#     for i in range(1, rows):
-#         for j in range(max(1,i - bound//2), min(i + bound//2, cols)):
-#             m[i,j] = min(m[i - 1, j - 1], m[i - 1, j], m[i, j - 1]) + DTW.dist(a1[i], a2[j])
-#
-#
-#     return m[rows-1, cols-1]
-#
-#
-# class KNN:
-#
-#     def __init__(self, k, proc=1):
-#         self.k = k
-#         self.proc = proc
-#         self.infty = float('inf')
-#         self.bound = 50
-#         self.m = np.full((256,256), np.infty, dtype=float)
-#
-#     def train(self, tsss, labels):
-#         # tsss is list of arrays where the array is a 9 by width combination of all signal data for a given frame
-#         assert(len(tsss) == len(labels))
-#         self.tsss = np.array(tsss)
-#         self.labels = np.array(labels)
-#
-#
-#     def comparesingle(self, s1, s2, m):
-#         # return DTW(s1,s2).result
-#         return dtw_iterative(s1,s2, m, self.bound)
-#
-#     def compareall(self, tss1, tss2, m):
-#         assert(len(tss1) == len(tss2))
-#         return np.sqrt(sum([self.comparesingle(tss1[i], tss2[i], m)**2 for i in range(len(tss1))]))
-#
-#     def predict(self, test):
-#         m = np.full((128,128), np.infty, dtype=float)
-#         comparefunc = functools.partial(self.compareall, tss2=test, m=m)
-#         return Counter(np.array(sorted(zip(map(comparefunc, self.tsss), self.labels)))[:self.k,1].astype('int')).most_common(1)[0][0]
-#
-#
-#     def predictmany(self, testset):
-#         p = Pool(processes=self.proc)
-#         res = p.map(self.predict, testset, chunksize=1)
-#         return res
-#
-#
-#
-#
-# class DKNN:
-#
-#     def __init__(self, k, proc=1):
-#         self.proc = proc
-#         self.k = k
-#         self.infty = float('inf')
-#         self.bound = 50
-#         self.m = np.full((256,256), np.infty, dtype=float)
-#
-#     def train(self, tsss, labels):
-#         # tsss is list of arrays where the array is a 9 by width combination of all signal data for a given frame
-#         assert(len(tsss) == len(labels))
-#         self.tsss = np.array(tsss)
-#         self.labels = np.array(labels)
-#
-#
-#     def predict(self, test):
-#         # print("starting inits")
-#         initfunc = functools.partial(multi_dtw_init, tss2=test, bound=50)
-#         q = [(t, m, 1, l, tss) for ((t, m), l, tss) in zip(map(initfunc, self.tsss), self.labels, self.tsss)]
-#         # print("init done, building heap")
-#         heapify(q)
-#         ctr = 0
-#         res = []
-#         # print("starting loop")
-#         while ctr < self.k:
-#             (t,m,i,l,tss) = q[0]
-#             if i >= tss.shape[1]:
-#                 res.append(l[0])
-#                 ctr += 1
-#                 heappop(q)
-#                 continue
-#             newt = multi_dtw_iteration(m, i, tss, tss2=test)
-#             if newt == np.infty:
-#                 continue
-#             heapreplace(q, (newt, m, i+1, l, tss))
-#         return Counter(res).most_common(1)[0][0]
-#
-#
-#     def predictmany(self, testset):
-#         p = Pool(processes=self.proc)
-#         res = p.map(self.predict, testset, chunksize=1)
-#         return res
-#
-#
 
+
+# Simple distance function between 2 points
 def d(x1,x2):
     return abs(x1-x2)
 
 
+# Calculate DTW of 2 time series in a matrix of 2x(2*bound+3) (can be done in just an array of 2*bound+3)
+# The bound is how much the indices of 2 points may differ
 def dtw_low_space(a1, a2, bound, d=d):
     assert(len(a1) == len(a2))
     mid = bound + 1
@@ -255,17 +30,40 @@ def dtw_low_space(a1, a2, bound, d=d):
             m[k, j] = min(m[k, j - 1], m[l, j], m[l, j + 1]) + d(a1[i], a2[i-mid+j])
     return m[(len(a1)-1) % 2, mid]
 
+
+#implementation in even less space
+def dtw_no_space(a1, a2, bound, d=d):
+    assert(len(a1) == len(a2))
+    mid = bound + 1
+    m = np.full((2*bound+3,), np.infty)
+    m[mid] = d(a1[0], a2[0])
+    for i in range(1,len(a1)):
+        for j in range(max(mid-i, 1), min(mid+(len(a1)-i-1), mid+bound)+1):
+            m[j] = min(m[j - 1], m[j], m[j + 1]) + d(a1[i], a2[i-mid+j])
+    return m[mid]
+
+
+# If you have multiple time series to compare, the result is just the sum
+# euclidean distance does not apply here, so no pythagorean stuff
 def multi_dtw_low_space(tss1, tss2, bound, d=d):
     assert(len(tss1) == len(tss2))
     total = 0
     for i in range(len(tss1)):
-        total += dtw_low_space(tss1[i], tss2[i], bound, d) # ** 2
+        total += dtw_low_space(tss1[i], tss2[i], bound, d)
     return total
 
 
 
+'''
+Base class the implements a KNN with distance function DTW, where the data is two-dimensional
+In the case of our dataset, 9 time series of length 128
+Complexity of train: O(1)
+Complexity of predict: O(bound*l*m) where l is the length of a series and m is the size of the trainset
+Complexity of predict_many: O(n*predict)
+'''
 class DTWKNN2D:
 
+    # k is how many neighbours it looks for, proc is how many threads may be used in calculation
     def __init__(self, k=5, bound=50, proc=1):
         self.k = k
         self.proc = proc
@@ -277,11 +75,23 @@ class DTWKNN2D:
         self.tsss = np.array(tsss)
         self.labels = np.array(labels)
 
+
     def predict(self, test):
+
+        # Prepare function to be used in the python map function, which must be a function that only gets 1 argument
         comparefunc = functools.partial(multi_dtw_low_space, tss2=test, bound=self.bound)
+
+        # From the inside out:
+        # map: calculate distance to every point in our dataset
+        # zip: combine with the labels in our dataset, so now we have a list of (dist, label) tuples
+        # sorted: sort on distance, smalles first
+        # np.array()[:self.k, 1]: make numpy array and take only the labels of the first k elements
+        # astype(int): cast to ints for the counter
+        # Counter().most_common: count the elements and take the highest count
         return Counter(np.array(sorted(zip(map(comparefunc, self.tsss), self.labels)))[:self.k, 1].astype('int')).most_common(1)[0][0]
 
 
+    # Wrapper that accepts a list of inputs and can multiprocess them
     def predict_many(self, testset, chunksize=1):
         p = Pool(processes=self.proc)
         res = p.map(self.predict, testset, chunksize=chunksize)
@@ -289,38 +99,43 @@ class DTWKNN2D:
 
 
 
+'''
+    This next part splits the DTW function in iterations, so we can have intermediate results.
+    We can apply dijkstra to these intermediate results so we calculate the smallest ones first
+    after having found the k smallest ones, the rest needs not be calculated
+    Sadly, the overhead of the heapq is way more than the early cutoff gains, with only some exceptions
+    Complexity is at worst case the same as base class complexity times log (m)
+'''
+
 def multi_dtw_init(tss1, tss2, bound):
     assert (tss1.shape == tss2.shape)
-    halfbound = (bound)//2
-    tssm = np.full((tss1.shape[0], 2, 2*halfbound+3), np.infty)
+    tssm = np.full((tss1.shape[0], 2*bound+3), np.infty)
     total = 0
     for i in range(len(tss1)):
-        total += dtw_init(tss1[i], tss2[i], tssm[i])**2
+        total += dtw_no_space_init(tssm[i], tss1[i], tss2[i])
     return total, tssm
 
 def multi_dtw_iteration(tssm, i, tss1, tss2):
     total = 0
     for j in range(tssm.shape[0]):
-        total += dtw_iteration(tssm[j], i, tss1[j], tss2[j]) ** 2
+        total += dtw_no_space_iter(tssm[j], i, tss1[j], tss2[j])
     return total
 
-def dtw_init(a1,a2,m):
+def dtw_no_space_init(m, a1, a2, d=d):
     assert(len(a1) == len(a2))
-    mid = m.shape[1]//2
-    m[0, mid] = d(a1[0], a2[0])
-    return m[0, mid]
+    mid = m.shape[0]//2
+    m[mid] = d(a1[0], a2[0])
+    return m[mid]
 
-
-def dtw_iteration(m, i, a1, a2):
-    mid = m.shape[1]//2
-    k = i%2
-    l = 1-k
-    halfbound = min(i, len(a1)-i-1, mid-2)
-    lower = mid-halfbound
-    upper = mid+halfbound + 1
-    for j in range(-halfbound, halfbound+1):
-        m[k, mid+j] = min(m[l, mid + j - 1], m[l, mid + j], m[l, mid + j + 1]) + d(a1[i], a2[i+j])
-    return min(m[k, lower:upper+1])
+def dtw_no_space_iter(m, i, a1, a2, d=d):
+    assert (len(a1) == len(a2))
+    mid = m.shape[0]//2
+    low = np.infty
+    for j in range(max(mid - i, 1), min(mid + (len(a1) - i), m.shape[0]-1)):
+        m[j] = min(m[j - 1], m[j], m[j + 1]) + d(a1[i], a2[i - mid + j])
+        if m[j] < low:
+            low = m[j]
+    return low
 
 
 class DKNN(DTWKNN2D):
@@ -345,40 +160,30 @@ class DKNN(DTWKNN2D):
         return Counter(res).most_common(1)[0][0]
 
 
-import random
 
 
-# def upperbound_dtw_low_space(a1, a2, bound, d=d):
-#     assert(len(a1) == len(a2))
-#     mid = bound // 2
-#     m = np.full((2,2*mid+3), np.infty)
-#     m[0,mid] = d(a1[0], a2[0])
-#     for i in range(1,len(a1)):
-#         k = i % 2
-#         l = 1-k
-#         halfbound = min(i, len(a1)-i-1, mid-2)
-#         for j in range(-halfbound, halfbound+1):
-#             m[k, mid+j] = min(m[l, mid + j - 1], m[l, mid + j], m[l, mid + j + 1]) + d(a1[i], a2[i+j])
-#     return m[(len(a1)-1) % 2, mid]
+'''
+    Different idea: We can determine an upper bound to the distance to each other series.
+    For this we determine some beacons, for which the distance to all other series is known.
+    Then for each pair of series, an upper bound is the sum of the distances of s1 to beacon to s2.
+    With multiple beacons we can take the lowest upper bound.
+    Then we can determine the kth upper bound and we know that at least k elements have a distance smaller than that
+    So if a calculation exceeds this distance, we can stop.
+    This methods is faster on this dataset. It performs about 1.5 times as fast
+'''
+
 
 def upperbound_multi_dtw_low_space(tss1, tss2, bound, upper, d=d):
     assert(len(tss1) == len(tss2))
     total = 0
     for i in range(len(tss1)):
-        total += dtw_low_space(tss1[i], tss2[i], bound, d)
+        total += dtw_no_space(tss1[i], tss2[i], bound, d)
         if total > upper:
             total = np.infty
             #print("Aborted after iteration {}.".format(i))
             return total, i
     #print("not aborted")
     return total, 8
-#
-# def multi_dtw_low_space_sq(tss1, tss2, bound, d=d):
-#     assert(len(tss1) == len(tss2))
-#     total = 0
-#     for i in range(len(tss1)):
-#         total += dtw_low_space(tss1[i], tss2[i], bound, d) ** 2
-#     return total
 
 
 class BoundedKNN(DTWKNN2D):
@@ -419,6 +224,14 @@ class BoundedKNN(DTWKNN2D):
         print("Avg abort: {}".format(avg_abort))
         return Counter(np.array(sorted(zip(res[:,0], self.labels)))[:self.k, 1].astype('int')).most_common(1)[0][0]
 
+
+
+
+'''
+    This one has the same idea as above, but then also tries to determine a lower bound.
+    For every series of which the lower bound is higher than the lowest upper bound, we just throw out immediately
+    Sadly we have not found a reliable lower bound calculation, so this produces invalid results
+'''
 class BeaKNN(DTWKNN2D):
 
     def __init__(self, k=5, bound=50, proc=1, beacons=20, verbose=False):
@@ -472,84 +285,97 @@ class BeaKNN(DTWKNN2D):
 
 
 
-body_acc_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_x_train.txt", header=None,
-                                sep='\s+').values
-body_acc_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_y_train.txt", header=None,
-                                sep='\s+').values
-body_acc_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_z_train.txt", header=None,
-                                sep='\s+').values
-body_gyro_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_x_train.txt", header=None,
-                                sep='\s+').values
-body_gyro_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_y_train.txt", header=None,
-                                sep='\s+').values
-body_gyro_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_z_train.txt", header=None,
-                                sep='\s+').values
-total_acc_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_x_train.txt", header=None,
-                                sep='\s+').values
-total_acc_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_y_train.txt", header=None,
-                                sep='\s+').values
-total_acc_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_z_train.txt", header=None,
-                                sep='\s+').values
-# trainset = [e for e in zip((body_acc_x_train,body_acc_y_train,body_acc_z_train,body_gyro_x_train,body_gyro_y_train,
-#                   body_gyro_z_train,total_acc_x_train,total_acc_y_train,total_acc_z_train))]
-
-trainset = np.dstack((body_acc_x_train,body_acc_y_train,body_acc_z_train,body_gyro_x_train,body_gyro_y_train,
-                  body_gyro_z_train,total_acc_x_train,total_acc_y_train,total_acc_z_train)).swapaxes(1,2)
-
-trainlabels = pd.read_csv("UCI+HAR+Dataset/train/y_train.txt", header=None, sep='\s+').values
 
 
-body_acc_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_x_test.txt", header=None,
-                                sep='\s+').values
-body_acc_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_y_test.txt", header=None,
-                                sep='\s+').values
-body_acc_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_z_test.txt", header=None,
-                                sep='\s+').values
-body_gyro_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_x_test.txt", header=None,
-                                sep='\s+').values
-body_gyro_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_y_test.txt", header=None,
-                                sep='\s+').values
-body_gyro_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_z_test.txt", header=None,
-                                sep='\s+').values
-total_acc_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_x_test.txt", header=None,
-                                sep='\s+').values
-total_acc_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_y_test.txt", header=None,
-                                sep='\s+').values
-total_acc_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_z_test.txt", header=None,
-                                sep='\s+').values
-# testset = [e for e in zip((body_acc_x_test,body_acc_y_test,body_acc_z_test,body_gyro_x_test,body_gyro_y_test,
-#                   body_gyro_z_test,total_acc_x_test,total_acc_y_test,total_acc_z_test))]
-
-testset = np.dstack((body_acc_x_test,body_acc_y_test,body_acc_z_test,body_gyro_x_test,body_gyro_y_test,
-                  body_gyro_z_test,total_acc_x_test,total_acc_y_test,total_acc_z_test)).swapaxes(1,2)
-
-testlabels = pd.read_csv("UCI+HAR+Dataset/test/y_test.txt", header=None, sep='\s+').values
-
-
-import time
 if __name__ == '__main__':
+
+    body_acc_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_x_train.txt", header=None,
+                                   sep='\s+').values
+    body_acc_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_y_train.txt", header=None,
+                                   sep='\s+').values
+    body_acc_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_acc_z_train.txt", header=None,
+                                   sep='\s+').values
+    body_gyro_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_x_train.txt", header=None,
+                                    sep='\s+').values
+    body_gyro_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_y_train.txt", header=None,
+                                    sep='\s+').values
+    body_gyro_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/body_gyro_z_train.txt", header=None,
+                                    sep='\s+').values
+    total_acc_x_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_x_train.txt", header=None,
+                                    sep='\s+').values
+    total_acc_y_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_y_train.txt", header=None,
+                                    sep='\s+').values
+    total_acc_z_train = pd.read_csv("UCI+HAR+Dataset/train/Inertial Signals/total_acc_z_train.txt", header=None,
+                                    sep='\s+').values
+
+    trainset = np.dstack((body_acc_x_train, body_acc_y_train, body_acc_z_train, body_gyro_x_train, body_gyro_y_train,
+                          body_gyro_z_train, total_acc_x_train, total_acc_y_train, total_acc_z_train)).swapaxes(1, 2)
+
+    trainlabels = pd.read_csv("UCI+HAR+Dataset/train/y_train.txt", header=None, sep='\s+').values
+
+    body_acc_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_x_test.txt", header=None,
+                                  sep='\s+').values
+    body_acc_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_y_test.txt", header=None,
+                                  sep='\s+').values
+    body_acc_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_acc_z_test.txt", header=None,
+                                  sep='\s+').values
+    body_gyro_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_x_test.txt", header=None,
+                                   sep='\s+').values
+    body_gyro_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_y_test.txt", header=None,
+                                   sep='\s+').values
+    body_gyro_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/body_gyro_z_test.txt", header=None,
+                                   sep='\s+').values
+    total_acc_x_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_x_test.txt", header=None,
+                                   sep='\s+').values
+    total_acc_y_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_y_test.txt", header=None,
+                                   sep='\s+').values
+    total_acc_z_test = pd.read_csv("UCI+HAR+Dataset/test/Inertial Signals/total_acc_z_test.txt", header=None,
+                                   sep='\s+').values
+
+
+    testset = np.dstack((body_acc_x_test, body_acc_y_test, body_acc_z_test, body_gyro_x_test, body_gyro_y_test,
+                         body_gyro_z_test, total_acc_x_test, total_acc_y_test, total_acc_z_test)).swapaxes(1, 2)
+
+    testlabels = pd.read_csv("UCI+HAR+Dataset/test/y_test.txt", header=None, sep='\s+').values
+
     starttime = time.time()
-    model = BoundedKNN(k=10, proc=6, bound=10, verbose=True, beacons=20)
+    # model = DKNN(k=5, proc=1, bound=20)
+
+    model = BoundedKNN(k=10, proc=10, bound=10, verbose=True, beacons=20)
     # model = BeaKNN(k=5, proc=6, bound=20, verbose=True, beacons=10)
 
-    # model = DTWKNN2D(k=10, proc=14, bound=20)
-    amount = 100
-    offset = 1610
-    model.train(trainset[:1000], trainlabels[:1000])
+    # model = DTWKNN2D(k=10, proc=1, bound=20)
+    test_amount = 1000
+    train_amount = 2000
+    train_indices = random.sample(range(trainset.shape[0]), train_amount)
+    test_indices = random.sample(range(testset.shape[0]), test_amount)
+    model.train(trainset[train_indices], trainlabels[train_indices])
     traintime = (time.time() - starttime)
     print("training took {:.3f} seconds".format(traintime))
     # res = model.predict(testset[0])
-    res = model.predict_many(testset[offset:offset + amount])
-    print(res)
-    print(testlabels[offset:offset + amount])
+    res = model.predict_many(testset[test_indices])
+    # print(res)
+    # print(testlabels[offset:offset + amount])
     testtime = (time.time() - starttime - traintime)
     print("testing took {:.3f} seconds".format(testtime))
-# a1 = np.array([1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8])
-# a2 = np.array([2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,98,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9,2,3,4,5,6,7,8,9])
+    m = np.zeros((6,6), dtype=np.int)
+    for (pred, act) in zip(res, testlabels[test_indices]):
+        m[pred-1][act-1] += 1
 
-# a1 = np.array([i for i in range(0,256,1)])
-# a2 = np.array([i for i in range(256,0,-1)])
-#
-# print(len(a1))
-# print(len(a2))
-# print(DTW(a1,a2).result)
+    print(m)
+
+    '''
+    For training input size 2000 and test size 1000, the elements of which were chosen randomly:
+    testing took 5871.916 seconds
+    
+    [[182  32  40   0   0   0]
+     [  1 113   0   0   0   0]
+     [  0   1 103   0   0   0]
+     [  0   0   0 138  43   0]
+     [  0   0   0  28 142   0]
+     [  0   0   0   1   0 176]]
+
+    '''
+
+
+

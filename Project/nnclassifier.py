@@ -37,13 +37,13 @@ if __name__ == "__main__":
         else:
             all_labels = np.concatenate((all_labels, labels))
 
-    # yaf_feat = all_features[all_labels == 1]
-    #
-    # fact = int(len(all_features) / len(yaf_feat)) - 1
-    #
-    # for i in range(fact):
-    #     all_features = np.concatenate(all_features, yaf_feat)
-    #     all_labels = np.concatenate(all_labels, np.ones(len(yaf_feat)))
+    yaf_feat = all_features[all_labels == 1]
+    
+    fact = int(len(all_features) / len(yaf_feat)) - 1
+    print(fact)    
+    for i in range(fact):
+        all_features = np.concatenate((all_features, yaf_feat))
+        all_labels = np.concatenate((all_labels, np.ones(len(yaf_feat))))
 
 
     nnclassifier = Sequential()
@@ -87,14 +87,16 @@ if __name__ == "__main__":
     fp = 0
     fn = 0
     for i in range(len(res)):
-        if all_labels[i] != 0 and res[i] != 0:
+        if all_labels[i] == 1 and res[i] > 0.5:
             tp += 1
-        elif all_labels[i] == 0 and res[i] == 0:
+        elif all_labels[i] == 0 and res[i] <= 0.5:
             tn += 1
-        elif all_labels[i] != 0 and res[i] == 0:
+        elif all_labels[i] == 1 and res[i] <= 0.5:
             fn += 1
-        elif all_labels[i] == 0 and res[i] != 0:
+        elif all_labels[i] == 0 and res[i] > 0.5:
             fp += 1
+        else:
+            print("wtf: {}, {}".format(all_labels[i], res[i]))
 
     print("Confusion Matrix:")
     print("{:4} | {:4}\n------------\n{:4} | {:4}".format(tp, fn, fp, tn))

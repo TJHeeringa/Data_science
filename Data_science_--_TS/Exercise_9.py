@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import statsmodels.tsa.stattools as ts
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.arima_model import ARIMA
-
+from Exercise_8 import dtw_no_space
 
 def dickey_fuller(_dict):
     for key, value in _dict.items():
@@ -48,8 +48,24 @@ for country, temps in countries.items():
             break
 countries = {k: v[-nan_index+1:-2] for (k, v) in countries.items()}
 
-# TODO use DTW on this
 dickey_fuller(countries)
+
+distances = np.zeros((4,4))
+for i in range(4):
+    for j in range(4):
+        distances[i,j] = dtw_no_space(np.array(countries[ls[i]]), np.array(countries[ls[j]]), 50)
+
+print("DTW distances normal data\n")
+print(distances)
+print()
+'''
+             Cambodia  Finland   Norway    Singapore
+             
+Cambodia   [[    0.    45655.892 47779.594  1283.332]
+Finland     [45655.892     0.     4046.264 45403.431]
+Norway      [47779.594  4046.264     0.    47527.133]
+Singapore   [ 1283.332 45403.431 47527.133     0.   ]]
+'''
 
 moving_avg_countries = dict()
 differencing_countries = dict()
@@ -71,10 +87,20 @@ for (country, temperatures) in countries.items():
     # decomposing.dropna(inplace=True)
     # decomposing_countries[country] = decomposing
 
-# TODO use DTW on these
+
 dickey_fuller(moving_avg_countries)
 dickey_fuller(differencing_countries)
 dickey_fuller(decomposing_countries)
+
+distances = np.zeros((4,4))
+for i in range(4):
+    for j in range(4):
+        distances[i,j] = dtw_no_space(np.array(differencing_countries[ls[i]]), np.array(differencing_countries[ls[j]]), 50)
+
+print("\n")
+print("DTW distances differenced data\n")
+print(distances)
+
 
 plt.figure()
 for (country, temperature) in differencing_countries.items():

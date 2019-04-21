@@ -5,7 +5,7 @@ from sklearn import svm
 import random
 
 
-totalfilecount = 10
+totalfilecount = 50
 testfraction = 0.2
 
 if __name__ == "__main__":

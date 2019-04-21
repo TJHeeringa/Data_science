@@ -69,7 +69,7 @@ mvalcust <- sal %>%
   full_join(cust, by = c("cust_id" = "cust_id")) %>% 
   select(name, sales)
 
-head(mvalcust)
+first5valcust <- head(mvalcust,5)
 
 # Most valuable product
 mvalprod <- sal %>% 
@@ -81,8 +81,11 @@ mvalprod <- sal %>%
   full_join(prod, by = c("productid" = "productid")) %>% 
   select(name, sales)
 
-head(mvalprod)
+first5valprod <- head(mvalprod, 5)
 
-ggplot(data=mvalcust, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
-ggplot(data=mvalprod, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
+ggplot(data=first5valcust, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 customers") + xlab("Customer") #+ theme(text = element_text(size=14))
+ggplot(data=first5valprod, aes(x = reorder(name, -sales), y = sales)) + geom_bar(stat= "identity") + ggtitle("Top 5 products") + xlab("Product")
+
+# ggplot(data=first5valcust, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
+# ggplot(data=mvalprod, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
 
