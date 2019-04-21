@@ -159,4 +159,4 @@ str(dbReadTable(con,"sales"))
 str(dbReadTable(con,"product"))
 dbGetQuery(con,
            "SELECT table_name FROM information_schema.tables
-            WHERE table_schema=’ass3’")
+            WHERE table_schema='ass3'")

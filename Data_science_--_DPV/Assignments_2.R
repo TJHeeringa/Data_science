@@ -91,4 +91,7 @@ ggsave(filename = "Ass2 - 2 - Most Valuable Products.pdf", plot = valprodplot)
 # ggplot(data=first5valcust, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
 # ggplot(data=mvalprod, aes(x = name, y = sales))+geom_point() + geom_smooth(method= "lm", se = FALSE)
 
-
+str(cust)
+str(sal)
+str(prod)
+# 
