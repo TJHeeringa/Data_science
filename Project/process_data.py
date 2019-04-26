@@ -43,7 +43,7 @@ def process(i):
 
     # Load data from file
     df = pd.read_csv("AF-Raw-Data/AF_Data/ECG_data/Data{}.txt".format(i), sep=' ', header=None, names=range(11), low_memory=False)
-    classes = pd.read_csv("AF-Raw-Data/AF_Data/Class/Control{}.txt".format(i), sep=' ', header=None, names=range(11), low_memory=False)
+    classes = pd.read_csv("AF-Raw-Data/AF_Data/Class2/Control{}.txt".format(i), sep=' ', header=None, names=range(11), low_memory=False)
 
     # print("{:.3}: loading data done.".format(time.time() - start_time))
 
