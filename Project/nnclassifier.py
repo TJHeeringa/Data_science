@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     nnclassifier = Sequential()
     nnclassifier.add(InputLayer(input_shape=(all_features.shape[1],)))
-    # nnclassifier.add(Dense(all_features.shape[1], activation='sigmoid'))
+    nnclassifier.add(Dense(all_features.shape[1], activation='sigmoid'))
     nnclassifier.add(Dense(1, activation='sigmoid'))
     nnclassifier.compile(loss='mse', optimizer='adam', metrics=['mse'])
 
